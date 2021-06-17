@@ -1,3 +1,5 @@
+import pandas as pd
+
 ########################### NULLS BY COLUMN ###########################
 
 #get nulls by column
@@ -5,7 +7,7 @@ def nulls_by_col(df):
     num_missing = df.isnull().sum()
     rows = df.shape[0]
     prcnt_miss = num_missing / rows * 100
-    cols_missing = pd.DataFrame({'num_rows_missing': num_missing, 'percent_rows_missing': prcnt_miss})
+    cols_missing = pd.DataFrame({'num_rows_missing': num_missing, 'pct_rows_missing': prcnt_miss})
     return cols_missing
 
 ########################### NULLS BY ROW ###########################
@@ -14,9 +16,9 @@ def nulls_by_col(df):
 def nulls_by_row(df):
     num_missing = df.isnull().sum(axis=1)
     prcnt_miss = num_missing / df.shape[1] * 100
-    rows_missing = pd.DataFrame({'num_cols_missing': num_missing, 'percent_cols_missing': prcnt_miss})\
+    rows_missing = pd.DataFrame({'num_cols_missing': num_missing, 'pct_cols_missing': prcnt_miss})\
     .reset_index()\
-    .groupby(['num_cols_missing', 'percent_cols_missing']).count()\
+    .groupby(['num_cols_missing', 'pct_cols_missing']).count()\
     .rename(index=str, columns={'index':'num_rows'}).reset_index()
     return rows_missing
 
@@ -48,8 +50,8 @@ def summarize(df):
     print('=================================================')
     print('Dataframe Description: ')
     print(df.describe())
-    num_cols = [cols for col in df.columns if df[col].dtype != '0']
-    cat_cols = [col for col in df.columns if col not in num_cols]
+    num_cols = [cols for col in df.columns if df[col].dtype != 'O']
+    cat_cols = [cols for col in df.columns if col not in num_cols]
     
     #print value counts
     print('=================================================')
@@ -109,8 +111,3 @@ def add_upper_outlier_columns(df, k=1.5):
     return df
 
 
-outlier_cols = [col for col in df.columns if col.endswith('_outlier_upper')]
-for col in outlier_cols:
-    print(col, ': ')
-    subset = df[col][df[col] > 0]
-    print(subset.describe())
