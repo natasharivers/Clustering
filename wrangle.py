@@ -109,5 +109,19 @@ def add_upper_outlier_columns(df, k=1.5):
     for col in df.select_dtypes('number'):
         df [col + '_outlier_upper'] = get_upper_outliers(df[col], k)
     return df
+    
+############################## DROP OUTLIERS FUNCTION ##############################
 
 
+def outlier_bound_calculation(df, variable):
+    '''
+    calcualtes the lower and upper bound to locate outliers in variables
+    '''
+    quartile1, quartile3 = np.percentile(df[variable], [25,75])
+    IQR_value = quartile3 - quartile1
+    lower_bound = quartile1 - (1.5 * IQR_value)
+    upper_bound = quartile3 + (1.5 * IQR_value)
+    '''
+    returns the lowerbound and upperbound values
+    '''
+    return print(f'For {variable} the lower bound is {lower_bound} and  upper bound is {upper_bound}')
