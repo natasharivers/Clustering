@@ -2,6 +2,11 @@ import pandas as pd
 import numpy as np
 
 
+from sklearn.model_selection import train_test_split
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import MinMaxScaler
+
+
 ########################### NULLS BY COLUMN ###########################
 
 #get nulls by column
@@ -52,8 +57,8 @@ def summarize(df):
     print('=================================================')
     print('Dataframe Description: ')
     print(df.describe())
-    num_cols = [cols for col in df.columns if df[col].dtype != 'O']
-    cat_cols = [cols for col in df.columns if col not in num_cols]
+    num_cols = [col for col in df.columns if df[col].dtype != 'O']
+    cat_cols = [col for col in df.columns if col not in num_cols]
     
     #print value counts
     print('=================================================')
@@ -127,3 +132,69 @@ def outlier_bound_calculation(df, variable):
     returns the lowerbound and upperbound values
     '''
     return print(f'For {variable} the lower bound is {lower_bound} and  upper bound is {upper_bound}')
+
+############################## ZILLOW SPLIT ##############################
+
+def zillow_split(df, target):
+    '''
+    This function take in get_zillow  from aquire.py and performs a train, validate, test split
+    Returns train, validate, test, X_train, y_train, X_validate, y_validate, X_test, y_test
+    and prints out the shape of train, validate, test
+    '''
+    #create train_validate and test datasets
+    train, test = train_test_split(df, train_size = 0.8, random_state = 123)
+    #create train and validate datasets
+    train, validate = train_test_split(train, train_size = 0.7, random_state = 123)
+
+    #Split into X and y
+    X_train = train.drop(columns=[target])
+    y_train = train[target]
+
+    X_validate = validate.drop(columns=[target])
+    y_validate = validate[target]
+
+    X_test = test.drop(columns=[target])
+    y_test = test[target]
+
+    # Have function print datasets shape
+    print(f'train -> {train.shape}')
+    print(f'validate -> {validate.shape}')
+    print(f'test -> {test.shape}')
+   
+    return train, validate, test, X_train, y_train, X_validate, y_validate, X_test, y_test
+
+############################## MinMax Scaler ##############################
+
+
+def min_max_scaler(X_train, X_validate, X_test, numeric_cols):
+    """
+    this function takes in 3 dataframes with the same columns,
+    a list of numeric column names (because the scaler can only work with numeric columns),
+    and fits a min-max scaler to the first dataframe and transforms all
+    3 dataframes using that scaler.
+    it returns 3 dataframes with the same column names and scaled values.
+    """
+    # create the scaler object and fit it to X_train (i.e. identify min and max)
+    # if copy = false, inplace row normalization happens and avoids a copy (if the input is already a numpy array).
+    scaler = MinMaxScaler(copy=True).fit(X_train[numeric_cols])
+    # scale X_train, X_validate, X_test using the mins and maxes stored in the scaler derived from X_train.
+    #
+    X_train_scaled_array = scaler.transform(X_train[numeric_cols])
+    X_validate_scaled_array = scaler.transform(X_validate[numeric_cols])
+    X_test_scaled_array = scaler.transform(X_test[numeric_cols])
+    # convert arrays to dataframes
+    X_train_scaled = pd.DataFrame(X_train_scaled_array, columns=numeric_cols).set_index(
+        [X_train.index.values]
+    )
+    X_validate_scaled = pd.DataFrame(
+        X_validate_scaled_array, columns=numeric_cols
+    ).set_index([X_validate.index.values])
+    X_test_scaled = pd.DataFrame(X_test_scaled_array, columns=numeric_cols).set_index(
+        [X_test.index.values]
+    )
+    # Overwriting columns in our input dataframes for simplicity
+    for i in numeric_cols:
+        X_train[i] = X_train_scaled[i]
+        X_validate[i] = X_validate_scaled[i]
+        X_test[i] = X_test_scaled[i]
+    return X_train, X_validate, X_test
