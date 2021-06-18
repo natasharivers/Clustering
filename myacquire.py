@@ -29,8 +29,8 @@ def get_zillow():
     
     zp_query = '''
     SELECT *
-    FROM properties_2017
-    LEFT JOIN predictions_2017 ON properties_2017.parcelid = predictions_2017.parcelid
+    FROM predictions_2017
+    LEFT JOIN properties_2017 ON predictions_2017.parcelid = properties_2017.parcelid
     LEFT JOIN airconditioningtype ON properties_2017.airconditioningtypeid= airconditioningtype.airconditioningtypeid
     LEFT JOIN architecturalstyletype ON properties_2017.architecturalstyletypeid= architecturalstyletype.architecturalstyletypeid
     LEFT JOIN buildingclasstype ON properties_2017.buildingclasstypeid= buildingclasstype.buildingclasstypeid
