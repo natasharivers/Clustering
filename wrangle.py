@@ -55,10 +55,10 @@ def summarize(df):
     
     #print descriptive stats
     print('=================================================')
-    print('Dataframe Description: ')
+    print('DataFrame Description')
     print(df.describe())
-    num_cols = [col for col in df.columns if df[col].dtype != 'O']
-    cat_cols = [col for col in df.columns if col not in num_cols]
+    num_cols = df.select_dtypes(exclude='O').columns.to_list()
+    cat_cols = df.select_dtypes(include='O').columns.to_list()
     
     #print value counts
     print('=================================================')
