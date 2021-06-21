@@ -198,3 +198,65 @@ def min_max_scaler(X_train, X_validate, X_test, numeric_cols):
         X_validate[i] = X_validate_scaled[i]
         X_test[i] = X_test_scaled[i]
     return X_train, X_validate, X_test
+
+
+def final_prep_zillow(df):
+    '''
+    This function takes in the zillow df acquired by get_zillow_file,
+    then the function removed outliers from bedrooms, bathrooms, value_assessed, and total_sqft
+    Returns a cleaned zillow df.
+    '''
+    # create dummy columns for species
+    fips_dummies = pd.get_dummies(df.fips)
+
+    # add dummy columns to df
+    df = pd.concat([df, fips_dummies], axis=1)
+
+    #change column names to be more legible
+    df = df.rename(columns={"calculatedfinishedsquarefeet": "total_sqft", "bedroomcnt": "bedrooms", "bathroomcnt": "bathrooms", "taxvaluedollarcnt": "value_assessed", "taxamount": "tax_amount", "yearbuilt": "year_built", "6037.0": "LA", "6059.0": "Orange", "6111.0": "Ventura"})
+    #replace blank spaces and special characters
+    df = df.replace(r'^\s*$', np.nan, regex=True)
+
+    #drop null values- at most there were 9000 nulls (this is only 0.5% of 2.1M)
+    df = df.dropna()
+    
+    #remove outliers for bedrooms
+    q1_bed = df['bedrooms'].quantile(0.25)
+    q3_bed = df['bedrooms'].quantile(0.75)
+    iqr_bed = q3_bed - q1_bed
+    lowerbound_bed = q1_bed - (1.5 * iqr_bed)
+    upperbound_bed = q3_bed + (1.5 * iqr_bed)
+    df= df[df.bedrooms > lowerbound_bed]
+    df= df[df.bedrooms < upperbound_bed]
+
+    #remove outliers for bathrooms
+    q1_bath = df['bathrooms'].quantile(0.25)
+    q3_bath = df['bathrooms'].quantile(0.75)
+    iqr_bath = q3_bath - q1_bath
+    lowerbound_bath = q1_bath - (1.5 * iqr_bath)
+    upperbound_bath = q3_bath + (1.5 * iqr_bath)
+    df= df[df.bathrooms > lowerbound_bath]
+    df= df[df.bathrooms < upperbound_bath]
+
+    #remove outliers for value assessed
+    q1_tax = df['value_assessed'].quantile(0.25)
+    q3_tax = df['value_assessed'].quantile(0.75)
+    iqr_tax = q3_tax- q1_tax
+    lowerbound_tax = q1_tax - (1.5 * iqr_tax)
+    upperbound_tax = q3_tax + (1.5 * iqr_tax)
+    df= df[df.value_assessed > lowerbound_tax]
+    df= df[df.value_assessed < upperbound_tax]
+
+    #remove outliers for total sqft
+    q1_sqft = df['total_sqft'].quantile(0.25)
+    q3_sqft = df['total_sqft'].quantile(0.75)
+    iqr_sqft = q3_sqft - q1_sqft
+    lowerbound_sqft = q1_sqft - (1.5 * iqr_sqft)
+    upperbound_sqft = q3_sqft + (1.5 * iqr_sqft)
+    df= df[df.total_sqft > lowerbound_sqft]
+    df= df[df.total_sqft < upperbound_sqft]
+
+    #drop duplicates
+    df.drop_duplicates(inplace=True)
+    
+    return df
